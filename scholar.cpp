@@ -14,7 +14,7 @@ Scholar::Scholar()
 void Scholar::setTitle(QString title)
 {
 	this->title = title;
-	uniqueHash = QString::fromAscii(QCryptographicHash::hash(title.toUtf8(), QCryptographicHash::Md5).toHex());
+	uniqueHash = QString::fromLatin1(QCryptographicHash::hash(title.toUtf8(), QCryptographicHash::Md5).toHex());
 }
 
 void Scholar::write(QIODevice *dev) const

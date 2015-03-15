@@ -4,6 +4,9 @@
 
 #include <QDebug>
 #include <QApplication>
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+#   include <QUrlQuery>
+#endif
 
 #include <errno.h>
 
@@ -61,7 +64,13 @@ int ScholarSearcher::findScholar(const QString &title)
 		delete parser;
 	parser = new GoogleScholarParser();
 	QUrl url("http://scholar.google.com/scholar");
+	#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
 	url.addQueryItem("q", title);
+	#else
+	QUrlQuery q;
+	q.addQueryItem("q", title);
+	url.setQuery(q);
+	#endif
 	int err = parser->parseUrl(url);
 	if (err)
 		return err;

@@ -101,7 +101,7 @@ void MainWindow::on_pushSingleSearch_clicked()
 	if (ui->comboSource->currentIndex() == 0) {
 		GoogleScholarParser *p = new GoogleScholarParser();
 		QUrl url("http://scholar.google.com/scholar");
-		url.addQueryItem("q", ui->lineQuery->text());
+		//url.addQueryItem("q", ui->lineQuery->text());
 		ui->plainSingleSearch->clear();
 		int err = p->parseUrl(url);
 		if (err) {

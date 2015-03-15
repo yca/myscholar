@@ -154,7 +154,11 @@ int GoogleScholarParser::reparse()
 			Scholar *s = new Scholar;
 			s->setTitle(inner.trimmed().toLower());
 			s->externalLink = el.attribute("href");
+			#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
 			if (inner == page.mainFrame()->url().queryItemValue("q"))
+			#else
+			if (inner == page.mainFrame()->url().query())
+			#endif
 				s->queryMatch = true;
 			r->list2 << s;
 		} else if (inner.contains("Cited by") && r->list2.size()) {
