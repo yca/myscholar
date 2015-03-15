@@ -19,7 +19,11 @@ SOURCES += main.cpp\
     singlescholarwidget.cpp \
     scholarsearcher.cpp \
     longoperation.cpp \
-    mynetworkaccessmanager.cpp
+    mynetworkaccessmanager.cpp \
+    batchreferencewidget.cpp \
+    querywidget.cpp \
+    mybrowser.cpp \
+    mybookmarks.cpp
 
 HEADERS  += mainwindow.h \
     pageparser.h \
@@ -27,7 +31,14 @@ HEADERS  += mainwindow.h \
     singlescholarwidget.h \
     scholarsearcher.h \
     longoperation.h \
-    mynetworkaccessmanager.h
+    mynetworkaccessmanager.h \
+    batchreferencewidget.h \
+    querywidget.h \
+    mybrowser.h \
+    mybookmarks.h
 
 FORMS    += mainwindow.ui \
-    singlescholarwidget.ui
+    singlescholarwidget.ui \
+    batchreferencewidget.ui \
+    querywidget.ui \
+    mybrowser.ui

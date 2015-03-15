@@ -3,6 +3,9 @@
 #include "scholar.h"
 
 #include <QDebug>
+#include <QApplication>
+
+#include <errno.h>
 
 ScholarSearcher::ScholarSearcher(QObject *parent) :
 	LongOperation(parent)
@@ -12,8 +15,10 @@ ScholarSearcher::ScholarSearcher(QObject *parent) :
 
 int ScholarSearcher::findReferences(Scholar *s)
 {
-	if (parser)
-		delete parser;
+	if (parser) {
+		parser->deleteLater();
+		parser = NULL;
+	}
 	QUrl url(s->externalLink);
 	if (s->externalLink.contains("ieeexplore.ieee.org")) {
 		parser = new IEEExploreParser();
@@ -21,7 +26,14 @@ int ScholarSearcher::findReferences(Scholar *s)
 		url = QString("http://ieeexplore.ieee.org/xpl/abstractReferences.jsp?arnumber=%1").arg(arnumber);
 	} else if (s->externalLink.contains("springer.com")) {
 		parser = new SpringerParser();
-	}
+	} else if (s->externalLink.contains("dl.acm.org")) {
+		parser = new AcmParser();
+		QString id = s->externalLink.split("id=").last();
+		url = QString("http://dl.acm.org/citation.cfm?id=%1&preflayout=flat").arg(id);
+	} else if (s->externalLink.contains("www.sciencedirect.com")) {
+		parser = new SciencedirectParser;
+	} else
+		return -EINVAL;
 	int err = parser->parseUrl(url);
 	if (err)
 		return err;
@@ -31,8 +43,8 @@ int ScholarSearcher::findReferences(Scholar *s)
 
 int ScholarSearcher::findCitations(Scholar *s)
 {
-	//if (parser)
-		//delete parser;
+	if (parser)
+		delete parser;
 	parser = new GoogleScholarParser();
 	QUrl url(QString("http://scholar.google.com%1").arg(s->citationsLink));
 	int err = parser->parseUrl(url);
@@ -60,11 +72,13 @@ int ScholarSearcher::findScholar(const QString &title)
 
 void ScholarSearcher::parseError(int err)
 {
+	QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 	emit searchError(err);
 }
 
 void ScholarSearcher::scholarSearchFinished()
 {
+	QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 	operationStep(1);
 }
 
@@ -75,13 +89,14 @@ void ScholarSearcher::citationSearchFinished()
 	operationStep(scholars.size());
 	if (r->nextLink.isEmpty()) {
 		operationStep(-1);
+		QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 	} else
 		parser->parseUrl(QUrl(QString("http://scholar.google.com%1").arg(r->nextLink)));
-
 }
 
 void ScholarSearcher::referenceSearchFinished()
 {
+	QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 	operationStep(1);
 }
 
@@ -89,5 +104,6 @@ int ScholarSearcher::startSearch(int total)
 {
 	connect(parser, SIGNAL(parseError(int)), SLOT(parseError(int)));
 	operationStart(total);
+	QApplication::setOverrideCursor(QCursor(Qt::BusyCursor));
 	return 0;
 }

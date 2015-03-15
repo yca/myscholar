@@ -6,10 +6,12 @@
 #include <QObject>
 #include <QWebPage>
 #include <QVariant>
+#include <QNetworkProxy>
 
 #include "scholar.h"
 
 class QNetworkReply;
+class QAuthenticator;
 
 class ParseResult
 {
@@ -61,6 +63,7 @@ public slots:
 	void pageLoadFinished(bool ok);
 	void nmFinished(QNetworkReply *reply);
 	void pageFrameCreated(QWebFrame*frame);
+	void proxyAuthenticationRequired(QNetworkProxy, QAuthenticator *);
 protected:
 	virtual int reparse() = 0;
 	virtual void parseNext() {}
@@ -87,6 +90,21 @@ class SpringerParser : public PageParser
 {
 	Q_OBJECT
 public:
+	virtual int reparse();
+};
+
+class AcmParser : public PageParser
+{
+	Q_OBJECT
+public:
+	virtual int reparse();
+};
+
+class SciencedirectParser : public PageParser
+{
+	Q_OBJECT
+public:
+	explicit SciencedirectParser(QObject *parent = 0);
 	virtual int reparse();
 };
 

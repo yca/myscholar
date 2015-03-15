@@ -59,8 +59,7 @@ void SingleScholarWidget::searchFinished()
 		s->saveScholar();
 	} else if (action == 2) {
 		if (r->list2.size() > 1) {
-			QMessageBox::warning(this, trUtf8("Multiple search results"), trUtf8("Found more than one result for this paper!"));
-			return;
+			QMessageBox::warning(this, trUtf8("Multiple search results"), trUtf8("Found more than one result for this paper, using first"));
 		} else if (!r->list2.size()) {
 			QMessageBox::warning(this, trUtf8("No search result"), trUtf8("Found no result for this paper!"));
 			return;
@@ -73,8 +72,29 @@ void SingleScholarWidget::searchFinished()
 	} else if (action == 3) {
 		s = scholars.last();
 		for (int i = 0; i < searcher->scholars.size(); i++) {
-			s->citingTitles << searcher->scholars[i]->title;
-			scholars << searcher->scholars[i];
+			Scholar *s2 = searcher->scholars[i];
+			s->citingTitles << s2->title;
+			scholars << s2;
+
+			/* check our local database before saving */
+			Scholar s3;
+			s3.setTitle(s2->title);
+			int err = s3.readScholar();
+			if (err == 0) {
+				if (s2->externalLink.isEmpty())
+					s2->externalLink = s3.externalLink;
+				if (s2->citationsLink.isEmpty())
+					s2->citationsLink = s3.citationsLink;
+				if (s2->citedBy <= 0)
+					s2->citedBy = s3.citedBy;
+				if (s2->citingTitles.isEmpty())
+					s2->citingTitles = s3.citingTitles;
+				if (s2->references.isEmpty())
+					s2->references = s3.references;
+			}
+
+			/* save */
+			s2->saveScholar();
 		}
 		s->saveScholar();
 	}
@@ -89,6 +109,8 @@ void SingleScholarWidget::on_lineTitle_returnPressed()
 {
 	QString title = ui->lineTitle->text().trimmed();
 	title = title.toLower();
+	title.replace("\n", " ");
+	title.replace("\r", " ");
 	/* we first check our cache */
 	Scholar *s = new Scholar;
 	s->setTitle(title);
@@ -144,14 +166,23 @@ static bool lessThan(const QString &s1, const QString &s2)
 	return true;
 }
 
+static bool lessThan2(const QPair<QString, int> &p1, const QPair<QString, int> &p2)
+{
+	if (p1.second < p2.second)
+		return false;
+	return true;
+}
+
 void SingleScholarWidget::on_pushDbStats_clicked()
 {
 	QDir d("scholars");
 	QStringList files = d.entryList(QStringList() << "*.sxt", QDir::Files | QDir::NoDotAndDotDot);
 
+	QStringList allTitles;
 	QStringList complete;
 	QStringList partialComplete;
 	QHash<QString, int> hosts;
+	QList<QPair<QString, int> > papers;
 	foreach(QString f, files) {
 		Scholar s;
 		s.uniqueHash = f.split(".").first();
@@ -162,6 +193,8 @@ void SingleScholarWidget::on_pushDbStats_clicked()
 			partialComplete << s.title;
 		QUrl url(s.externalLink);
 		hosts[url.host()]++;
+		allTitles << s.title;
+		papers << QPair<QString, int>(s.title, s.citedBy);
 	}
 
 	QStringList lines;
@@ -174,8 +207,35 @@ void SingleScholarWidget::on_pushDbStats_clicked()
 	qSort(hostsSorted.begin(), hostsSorted.end(), lessThan);
 	foreach(QString h, hostsSorted) {
 		lines << QString("\t%1: %2").arg(h).arg(hosts[h]);
+		if (hosts[h] < 10)
+			break;
 	}
+
+	/* most cited papers */
+	qSort(papers.begin(), papers.end(), lessThan2);
+	lines << QString("Most cited 100 papers:");
+	for (int i = 0; i < 100; i++)
+		lines << QString("\t%1: %2").arg(papers[i].first).arg(papers[i].second);
+
+	/* check test file */
+	if (QFile::exists("test.txt")) {
+		lines << QString("analyzing test.txt:");
+		QFile f("test.txt");
+		if (f.open(QIODevice::ReadOnly)) {
+			QStringList items = QString::fromUtf8(f.readAll()).split("\n");
+			f.close();
+			foreach (const QString &item, items) {
+				if (allTitles.contains(item.toLower(), Qt::CaseInsensitive))
+					lines << QString("\t%1 : 1").arg(item);
+				else
+					lines << QString("\t%1 : 0").arg(item);
+			}
+		}
+	}
+
+	/* visualize */
 	QPlainTextEdit edit;
+	edit.resize(500, 400);
 	edit.setPlainText(lines.join("\n"));
 	edit.show();
 	while (edit.isVisible())

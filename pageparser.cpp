@@ -7,8 +7,46 @@
 #include <QWebElement>
 #include <QDataStream>
 #include <QNetworkReply>
+#include <QAuthenticator>
 
 #include <errno.h>
+
+static QStringList dictWords;
+static QString titleSearch(const QStringList &flds)
+{
+	QString title;
+	foreach (const QString fld, flds) {
+		QStringList words = fld.split(" ", QString::SkipEmptyParts);
+		int cnt = 0;
+		foreach (const QString word, words) {
+			if (word.size() <= 1 || word.contains("."))
+				continue;
+			if (word.compare("at", Qt::CaseInsensitive) == 0)
+				continue;
+			if (word.compare("et", Qt::CaseInsensitive) == 0)
+				continue;
+			if (dictWords.contains(word, Qt::CaseInsensitive))
+				cnt++;
+		}
+		if (cnt >= 3) {
+			title = fld;
+			break;
+		}
+	}
+	return title.trimmed().toLower();
+}
+
+static QString parseIEEEStyle(const QString &desc)
+{
+	int in = desc.indexOf(" and ");
+	in = desc.indexOf(QRegExp("\\w{2,}\\.{1} +"), in);
+	if (in < 0)
+		in = desc.indexOf(".", 2);
+	else
+		in = desc.indexOf(".", in + 4);
+	QString title = desc.mid(in + 1);
+	return title.split(".").first().trimmed().toLower();
+}
 
 PageParser::PageParser(QObject *parent) :
 	QObject(parent)
@@ -17,6 +55,7 @@ PageParser::PageParser(QObject *parent) :
 	connect(&page, SIGNAL(loadFinished(bool)), SLOT(pageLoadFinished(bool)));
 	connect(&page, SIGNAL(loadStarted()), SLOT(pageLoadStarted()));
 	connect(&page, SIGNAL(frameCreated(QWebFrame*)), SLOT(pageFrameCreated(QWebFrame*)));
+	connect(page.networkAccessManager(), SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)), SLOT(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)));
 	parseResult = NULL;
 	loading = false;
 	parseDone = false;
@@ -46,6 +85,14 @@ void PageParser::pageLoadFinished(bool ok)
 
 	if (parseDone)
 		return;
+
+	if (dictWords.size() == 0) {
+		QFile f("/usr/share/dict/words");
+		if (f.open(QIODevice::ReadOnly)) {
+			dictWords = QString::fromUtf8(f.readAll()).split("\n");
+			f.close();
+		}
+	}
 
 	qDebug() << "load finished";
 	int err = reparse();
@@ -78,6 +125,13 @@ void PageParser::pageFrameCreated(QWebFrame *frame)
 	//qDebug() << "new frame added" << frame->frameName();
 }
 
+void PageParser::proxyAuthenticationRequired(QNetworkProxy, QAuthenticator *a)
+{
+	a->setUser("hiler");
+	a->setPassword("hil68er");
+	qDebug() << "proxy authentication required";
+}
+
 int GoogleScholarParser::reparse()
 {
 	if (parseResult)
@@ -103,7 +157,7 @@ int GoogleScholarParser::reparse()
 			if (inner == page.mainFrame()->url().queryItemValue("q"))
 				s->queryMatch = true;
 			r->list2 << s;
-		} else if (inner.contains("Cited by")) {
+		} else if (inner.contains("Cited by") && r->list2.size()) {
 			r->list2.last()->citationsLink = el.attribute("href");
 			r->list2.last()->citedBy = inner.remove("Cited by").trimmed().toInt();
 		}
@@ -115,13 +169,13 @@ int GoogleScholarParser::reparse()
 	if (r->nextLink.isEmpty()) {
 		/* check if this is a robot detection */
 		const QString pstr = page.mainFrame()->toPlainText();
-		if (pstr.contains("Please type the words below so that we know you're not a robot."))
+		if (pstr.contains("Please type the words below so that we know you're not a robot.")
+			|| pstr.contains("To continue, please type the characters below:"))
 			return 0x1525;
 	}
 
 	return 0;
 }
-
 
 int IEEExploreParser::reparse()
 {
@@ -151,24 +205,17 @@ int IEEExploreParser::reparse()
 	QWebElementCollection coll = el.findAll("li");
 	foreach (QWebElement ref, coll) {
 		QString desc = ref.toPlainText().split("\n").first();
-		int in = desc.indexOf(" and ");
-		in = desc.indexOf(QRegExp("\\w{2,}\\.{1} +"), in);
-		if (in < 0)
-			in = desc.indexOf(".", 2);
-		else
-			in = desc.indexOf(".", in + 4);
-		desc = desc.mid(in + 1);
-		QString title = desc.split(".").first().trimmed().toLower();
+		QString title = parseIEEEStyle(desc);
+		//QString title = titleSearch(desc.split("."));
 		if (title.isEmpty())
 			continue;
 		Scholar *s = new Scholar;
-		s->setTitle(title);
+		s->setTitle(title.trimmed().toLower());
 		r->list2 << s;
 	}
 
 	return 0;
 }
-
 
 int SpringerParser::reparse()
 {
@@ -187,6 +234,106 @@ int SpringerParser::reparse()
 		int in = desc.indexOf(":");
 		int in2 = desc.indexOf(".", in + 1);
 		QString title = desc.mid(in + 1, in2 - in - 1).trimmed();
+		if (title.isEmpty())
+			continue;
+		Scholar *s = new Scholar;
+		s->setTitle(title.toLower());
+		r->list2 << s;
+	}
+
+	return 0;
+}
+
+int AcmParser::reparse()
+{
+	/* we support ACM's flat layout */
+	QString urlstr = page.mainFrame()->url().toString();
+	qDebug() << "done" << urlstr;
+
+	if (parseResult)
+		delete parseResult;
+
+	ScholarResultList *r = new ScholarResultList;
+	parseResult = r;
+	QWebElementCollection coll = page.mainFrame()->findAllElements("span[class=\"heading\"]");
+	foreach (QWebElement span, coll) {
+		QString section = span.toPlainText().trimmed();
+		/*
+		 *	"AUTHORS"
+			"REFERENCES"
+			"CITED BY"
+			"INDEX TERMS"
+			"The ACM Computing Classification System (CCS rev.2012)"
+			"The ACM Computing Classification System"
+			"Primary Classification:"
+			"Additional Classification:"
+			"PUBLICATION"
+			"REVIEWS"
+			"COMMENTS"
+		*/
+		if (section != "REFERENCES")
+			continue;
+		QWebElement el = span.parent().parent().nextSibling().findFirst("table");
+		QWebElementCollection coll2 = el.findAll("tr");
+		foreach (QWebElement tr, coll2) {
+			QString text = tr.lastChild().firstChild().toPlainText();
+			QString place = tr.lastChild().findFirst("i").toPlainText();
+			QString title;
+			if (place.isEmpty()) {
+				QStringList flds = text.split(",");
+				title = titleSearch(flds);
+			} else {
+				//title = parseIEEEStyle(text.split(place).first());
+				title = titleSearch(text.split(place).first().split("."));
+			}
+			if (!title.isEmpty()) {
+				Scholar *s = new Scholar;
+				s->setTitle(title.toLower());
+				r->list2 << s;
+			}
+		}
+		break;
+	}
+
+	return 0;
+}
+
+
+SciencedirectParser::SciencedirectParser(QObject *parent)
+	: PageParser(parent)
+{
+	page.networkAccessManager()->setProxy(QNetworkProxy(QNetworkProxy::HttpProxy, "proxy.baskent.edu.tr", 8080, "hiler", "hil68er"));
+}
+
+int SciencedirectParser::reparse()
+{
+	QString urlstr = page.mainFrame()->url().toString();
+	qDebug() << "done" << urlstr;
+
+	if (parseResult)
+		delete parseResult;
+
+	ScholarResultList *r = new ScholarResultList;
+	parseResult = r;
+
+	QWebElement el = page.mainFrame()->findFirstElement("ol[class=\"references\"]");
+	QWebElementCollection coll = el.findAll("li[class=\"author\"]");
+	foreach (QWebElement li, coll) {
+		QString desc = li.toPlainText().trimmed();
+		desc.replace("\n", " ");
+		desc.replace("\r", " ");
+		QString title = titleSearch(desc.split(","));
+		if (title.contains("."))
+			title = title.split(".").last().trimmed();
+		if (title.isEmpty())
+			continue;
+		Scholar *s = new Scholar;
+		s->setTitle(title);
+		r->list2 << s;
+	}
+	coll = el.findAll("li[class=\"title\"]");
+	foreach (QWebElement li, coll) {
+		QString title = li.toPlainText().trimmed().toLower();
 		if (title.isEmpty())
 			continue;
 		Scholar *s = new Scholar;
