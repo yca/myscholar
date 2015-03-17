@@ -35,7 +35,9 @@ private slots:
 	void on_pushNote_clicked();
 
 private:
-	void filter(QString text);
+	int filter(QString text);
+	int filterByHash(const QString &hash);
+	void showItems(const QStringList &list);
 
 	Ui::QueryWidget *ui;
 	QStringList allTitles;

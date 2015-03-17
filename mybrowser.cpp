@@ -38,8 +38,7 @@ MyBrowser::~MyBrowser()
 
 void MyBrowser::closeEvent(QCloseEvent *ev)
 {
-	ev->ignore();
-	hide();
+	QWidget::closeEvent(ev);
 }
 
 void MyBrowser::on_listTabs_itemDoubleClicked(QListWidgetItem *item)

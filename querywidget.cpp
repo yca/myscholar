@@ -7,13 +7,43 @@
 #include <QDir>
 #include <QMenu>
 #include <QDebug>
+#include <QComboBox>
 #include <QInputDialog>
+#include <QPlainTextEdit>
+
+#define COLOR_READ Qt::darkGreen
+#define COLOR_SEEN Qt::darkBlue
 
 static bool lessThan2(const QPair<QString, int> &p1, const QPair<QString, int> &p2)
 {
 	if (p1.second < p2.second)
 		return false;
 	return true;
+}
+
+static QString getNote(const QStringList &cats, QString &cat, const QString &init = "")
+{
+	QFrame f;
+	f.setLayout(new QVBoxLayout());
+	QComboBox combo(&f);
+	combo.addItems(cats);
+	combo.setEditable(true);
+	f.layout()->addWidget(&combo);
+	QPlainTextEdit plain(&f);
+	plain.setPlainText(init);
+	f.layout()->addWidget(&plain);
+	f.show();
+	f.setWindowModality(Qt::ApplicationModal);
+	while (f.isVisible())
+		QApplication::processEvents();
+	cat = combo.currentText();
+	return plain.toPlainText();
+}
+
+static QString getNote()
+{
+	QString cat;
+	return getNote(QStringList(), cat);
 }
 
 QueryWidget::QueryWidget(QWidget *parent) :
@@ -52,8 +82,10 @@ void QueryWidget::on_lineQuery_textChanged(const QString &arg1)
 	filter(arg1.trimmed());
 }
 
-void QueryWidget::filter(QString text)
+int QueryWidget::filter(QString text)
 {
+	if (text.startsWith("!"))
+		return filterByHash(text.mid(1));
 	QStringList list = allTitles;
 	if (!text.isEmpty()) {
 		if (text.contains("||")) {
@@ -69,8 +101,36 @@ void QueryWidget::filter(QString text)
 			list = allTitles.filter(text, Qt::CaseInsensitive);
 	}
 
+	showItems(list);
+
+	return 0;
+}
+
+int QueryWidget::filterByHash(const QString &hash)
+{
+	QStringList list;
+	QHashIterator<QString, Scholar *> i(scholars);
+	while (i.hasNext()) {
+		i.next();
+		Scholar *s = i.value();
+		if (s->uniqueHash == hash)
+			list << s->title;
+	}
+	showItems(list);
+	return 0;
+}
+
+void QueryWidget::showItems(const QStringList &list)
+{
 	ui->listWidget->clear();
 	ui->listWidget->addItems(list);
+	for (int i = 0; i < ui->listWidget->count(); i++) {
+		Scholar *s = scholars[ui->listWidget->item(i)->text()];
+		if (MyBookmarks::contains("readby", s->uniqueHash, "caglar"))
+			ui->listWidget->item(i)->setForeground(COLOR_READ);
+		else if (MyBookmarks::contains("seenby", s->uniqueHash, "caglar"))
+			ui->listWidget->item(i)->setForeground(COLOR_SEEN);
+	}
 	ui->labelStat_2->setText(QString("Showing %1 scholars").arg(list.size()));
 }
 
@@ -99,11 +159,16 @@ void QueryWidget::on_listWidget_customContextMenuRequested(const QPoint &pos)
 	QListWidgetItem *item = ui->listWidget->itemAt(pos);
 	if (!item)
 		return;
+	Scholar *s = scholars[item->text()];
 	QMenu m;
 	m.addAction("Open Browser(Ctrl + Enter)");
 	m.addAction("Bookmark");
 	m.addAction("Quote");
-	QAction *act = m.exec(pos);
+	m.addAction("Read");
+	m.addAction("Tag");
+	m.addAction("Mark as read");
+	m.addAction("Mark as seen");
+	QAction *act = m.exec(ui->listWidget->mapToGlobal(pos));
 	if (!act)
 		return;
 	if (act->text().contains("Browser"))
@@ -111,11 +176,23 @@ void QueryWidget::on_listWidget_customContextMenuRequested(const QPoint &pos)
 	else if (act->text().contains("Bookmark"))
 		MyBookmarks::add(item->text());
 	else if (act->text().contains("Quote")) {
-		QString quote = QInputDialog::getText(this, trUtf8("Quote"), trUtf8("Please enter quote text:"));
+		QString quote = getNote();
 		if (!quote.isEmpty()) {
-			Scholar *s = scholars[item->text()];
 			MyBookmarks::addQuote(s->uniqueHash, quote);
 		}
+	} else if (act->text().contains("Mark as read")) {
+		MyBookmarks::addToGroup("readby", s->uniqueHash, "caglar");
+		item->setForeground(COLOR_READ);
+	}else if (act->text().contains("Mark as seen")) {
+		MyBookmarks::addToGroup("seenby", s->uniqueHash, "caglar");
+		item->setForeground(COLOR_SEEN);
+	} else if (act->text().contains("Read")) {
+		MyBookmarks::addToGroup("read", s->title);
+	} else if (act->text().contains("Tag")) {
+		QString cat;
+		QString t = getNote(MyBookmarks::getGroups(), cat, s->uniqueHash);
+		if (!t.isEmpty())
+			MyBookmarks::addToGroup(cat, t);
 	}
 }
 
@@ -126,8 +203,9 @@ void QueryWidget::on_pushBookmarks_clicked()
 
 void QueryWidget::on_pushNote_clicked()
 {
-	QString t = QInputDialog::getText(this, trUtf8("Note input"), trUtf8("Please enter your note text:"));
+	QString cat;
+	QString t = getNote(MyBookmarks::getGroups(), cat);
 	if (t.isEmpty())
 		return;
-	MyBookmarks::add("notes", t);
+	MyBookmarks::addToGroup(cat, t);
 }
