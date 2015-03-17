@@ -22,6 +22,23 @@ void MyBookmarks::add(const QString &section, const QString &bookmark)
 	inst.s.sync();
 }
 
+void MyBookmarks::addToGroup(const QString &group, const QString &text, const QString &key)
+{
+	inst.s.beginGroup(group);
+	QStringList list = inst.s.value(key).toStringList();
+	list << text;
+	inst.s.setValue(key, list);
+	inst.s.endGroup();
+}
+
+bool MyBookmarks::contains(const QString &group, const QString &text, const QString &key)
+{
+	inst.s.beginGroup(group);
+	QStringList list = inst.s.value(key).toStringList();
+	inst.s.endGroup();
+	return list.contains(text);
+}
+
 void MyBookmarks::addQuote(const QString &scholar, const QString &quote)
 {
 	inst.s.beginGroup("quotes");
@@ -29,6 +46,11 @@ void MyBookmarks::addQuote(const QString &scholar, const QString &quote)
 	list << quote;
 	inst.s.setValue(scholar, list);
 	inst.s.endGroup();
+}
+
+QStringList MyBookmarks::getGroups()
+{
+	return inst.s.childGroups();
 }
 
 QStringList MyBookmarks::all()
