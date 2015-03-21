@@ -12,6 +12,7 @@ public:
 	static void addToGroup(const QString &group, const QString &text, const QString &key = "nokey");
 	static bool contains(const QString &group, const QString &text, const QString &key = "nokey");
 	static void addQuote(const QString &scholar, const QString &quote);
+	static QHash<QString, QStringList> getQuotes();
 	static QStringList getGroups();
 	static QStringList all();
 protected:

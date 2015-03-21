@@ -40,10 +40,10 @@ static QString getNote(const QStringList &cats, QString &cat, const QString &ini
 	return plain.toPlainText();
 }
 
-static QString getNote()
+static QString getNote(const QString &init = "")
 {
 	QString cat;
-	return getNote(QStringList(), cat);
+	return getNote(QStringList(), cat, init);
 }
 
 QueryWidget::QueryWidget(QWidget *parent) :
@@ -64,6 +64,7 @@ QueryWidget::QueryWidget(QWidget *parent) :
 		s->readScholar();
 		papers << QPair<QString, int>(s->title, s->citedBy);
 		scholars.insert(s->title, s);
+		scholarsByHash.insert(s->uniqueHash, s);
 	}
 	qSort(papers.begin(), papers.end(), lessThan2);
 	for (int i = 0; i < papers.size(); i++)
@@ -198,7 +199,21 @@ void QueryWidget::on_listWidget_customContextMenuRequested(const QPoint &pos)
 
 void QueryWidget::on_pushBookmarks_clicked()
 {
-
+	QString text;
+	QStringList keys;
+	QHash<QString, QStringList> quotes = MyBookmarks::getQuotes();
+	keys = quotes.keys();
+	QHashIterator<QString, QStringList> i(quotes);
+	while (i.hasNext()) {
+		i.next();
+		QStringList l = i.value();
+		foreach (QString q, l) {
+			text.append((q.replace("\n", " ").append(QString("[%1]\n\n").arg(keys.indexOf(i.key()) + 1))));
+		}
+	}
+	for (int i = 0; i < keys.size(); i++)
+		text.append(QString("[%1] %2\n").arg(i + 1).arg(scholarsByHash[keys[i]]->title));
+	getNote(text);
 }
 
 void QueryWidget::on_pushNote_clicked()

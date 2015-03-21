@@ -46,3 +46,8 @@ void MyBrowser::on_listTabs_itemDoubleClicked(QListWidgetItem *item)
 	ui->tabWidget->setCurrentIndex(urls[QUrl(item->text())]);
 	ui->lineAddressBar->setText(item->text());
 }
+
+void MyBrowser::on_tabWidget_currentChanged(int index)
+{
+	ui->lineAddressBar->setText(ui->listTabs->item(index - 1)->text());
+}

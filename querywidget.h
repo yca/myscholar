@@ -43,6 +43,7 @@ private:
 	QStringList allTitles;
 	QHash<QString, Scholar *> scholars;
 	QList<QPair<QString, int> > papers;
+	QHash<QString, Scholar *> scholarsByHash;
 	MyBrowser *browser;
 };
 

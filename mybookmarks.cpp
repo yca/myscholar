@@ -48,6 +48,17 @@ void MyBookmarks::addQuote(const QString &scholar, const QString &quote)
 	inst.s.endGroup();
 }
 
+QHash<QString, QStringList> MyBookmarks::getQuotes()
+{
+	inst.s.beginGroup("quotes");
+	QStringList hashes = inst.s.allKeys();
+	QHash<QString, QStringList> quotes;
+	foreach (QString h, hashes)
+		quotes.insert(h, inst.s.value(h).toStringList());
+	inst.s.endGroup();
+	return quotes;
+}
+
 QStringList MyBookmarks::getGroups()
 {
 	return inst.s.childGroups();

@@ -24,6 +24,8 @@ protected:
 private slots:
 	void on_listTabs_itemDoubleClicked(QListWidgetItem *item);
 
+	void on_tabWidget_currentChanged(int index);
+
 private:
 	Ui::MyBrowser *ui;
 	QHash<QUrl, int> urls;

@@ -27,7 +27,7 @@
    <item row="0" column="4">
     <widget class="QPushButton" name="pushBookmarks">
      <property name="text">
-      <string>Bookmarks</string>
+      <string>Quotes</string>
      </property>
     </widget>
    </item>
