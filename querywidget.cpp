@@ -87,6 +87,10 @@ int QueryWidget::filter(QString text)
 {
 	if (text.startsWith("!"))
 		return filterByHash(text.mid(1));
+	else if (text.startsWith("@@"))
+		return filterByRead(true, true);
+	else if (text.startsWith("@"))
+		return filterByRead(true, false);
 	QStringList list = allTitles;
 	if (!text.isEmpty()) {
 		if (text.contains("||")) {
@@ -115,6 +119,22 @@ int QueryWidget::filterByHash(const QString &hash)
 		i.next();
 		Scholar *s = i.value();
 		if (s->uniqueHash == hash)
+			list << s->title;
+	}
+	showItems(list);
+	return 0;
+}
+
+int QueryWidget::filterByRead(bool read, bool seen)
+{
+	QStringList list;
+	QHashIterator<QString, Scholar *> i(scholars);
+	while (i.hasNext()) {
+		i.next();
+		Scholar *s = i.value();
+		if (read && MyBookmarks::contains("readby", s->uniqueHash, "caglar"))
+			list << s->title;
+		if (seen && MyBookmarks::contains("seenby", s->uniqueHash, "caglar"))
 			list << s->title;
 	}
 	showItems(list);

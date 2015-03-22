@@ -37,6 +37,7 @@ private slots:
 private:
 	int filter(QString text);
 	int filterByHash(const QString &hash);
+	int filterByRead(bool read, bool seen);
 	void showItems(const QStringList &list);
 
 	Ui::QueryWidget *ui;
