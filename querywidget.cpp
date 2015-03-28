@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QDebug>
 #include <QComboBox>
+#include <QClipboard>
 #include <QInputDialog>
 #include <QPlainTextEdit>
 
@@ -167,11 +168,7 @@ void QueryWidget::on_listWidget_currentRowChanged(int currentRow)
 void QueryWidget::on_listWidget_itemActivated(QListWidgetItem *item)
 {
 	if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
-		if (!browser)
-			browser = new MyBrowser;
-		Scholar *s = scholars[item->text()];
-		browser->addTab(s->externalLink);
-		browser->show();
+		openBrowser(item->text());
 	}
 }
 
@@ -189,11 +186,12 @@ void QueryWidget::on_listWidget_customContextMenuRequested(const QPoint &pos)
 	m.addAction("Tag");
 	m.addAction("Mark as read");
 	m.addAction("Mark as seen");
+	m.addAction("Copy link address");
 	QAction *act = m.exec(ui->listWidget->mapToGlobal(pos));
 	if (!act)
 		return;
 	if (act->text().contains("Browser"))
-		on_listWidget_itemActivated(item);
+		openBrowser(item->text());
 	else if (act->text().contains("Bookmark"))
 		MyBookmarks::add(item->text());
 	else if (act->text().contains("Quote")) {
@@ -214,6 +212,9 @@ void QueryWidget::on_listWidget_customContextMenuRequested(const QPoint &pos)
 		QString t = getNote(MyBookmarks::getGroups(), cat, s->uniqueHash);
 		if (!t.isEmpty())
 			MyBookmarks::addToGroup(cat, t);
+	} else if (act->text().contains("Copy link address")) {
+		QClipboard *c = QApplication::clipboard();
+		c->setText(s->externalLink);
 	}
 }
 
@@ -243,4 +244,13 @@ void QueryWidget::on_pushNote_clicked()
 	if (t.isEmpty())
 		return;
 	MyBookmarks::addToGroup(cat, t);
+}
+
+void QueryWidget::openBrowser(const QString &text)
+{
+	if (!browser)
+		browser = new MyBrowser;
+	Scholar *s = scholars[text];
+	browser->addTab(s->externalLink);
+	browser->show();
 }

@@ -35,6 +35,7 @@ private slots:
 	void on_pushNote_clicked();
 
 private:
+	void openBrowser(const QString &text);
 	int filter(QString text);
 	int filterByHash(const QString &hash);
 	int filterByRead(bool read, bool seen);
