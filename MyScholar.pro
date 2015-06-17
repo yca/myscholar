@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     batchreferencewidget.cpp \
     querywidget.cpp \
     mybrowser.cpp \
-    mybookmarks.cpp
+    mybookmarks.cpp \
+    dataset/googleimagedownloader.cpp \
+    imagesearchwidget.cpp
 
 HEADERS  += mainwindow.h \
     pageparser.h \
@@ -35,10 +37,13 @@ HEADERS  += mainwindow.h \
     batchreferencewidget.h \
     querywidget.h \
     mybrowser.h \
-    mybookmarks.h
+    mybookmarks.h \
+    dataset/googleimagedownloader.h \
+    imagesearchwidget.h
 
 FORMS    += mainwindow.ui \
     singlescholarwidget.ui \
     batchreferencewidget.ui \
     querywidget.ui \
-    mybrowser.ui
+    mybrowser.ui \
+    imagesearchwidget.ui
