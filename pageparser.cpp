@@ -160,6 +160,16 @@ int GoogleScholarParser::reparse()
 			if (inner == page.mainFrame()->url().query())
 			#endif
 				s->queryMatch = true;
+			QWebElement dateDiv = el.parent().nextSibling();
+			QStringList parts;
+			if (!dateDiv.isNull())
+				parts = dateDiv.toInnerXml().trimmed().split(QRegExp("\\s"), QString::SkipEmptyParts);
+			foreach (QString part, parts) {
+				if (part.size() == 4 && part.toInt() > 1900 && part.toInt() < 3000) {
+					s->publicationDate = part;
+					break;
+				}
+			}
 			r->list2 << s;
 		} else if (inner.contains("Cited by") && r->list2.size()) {
 			r->list2.last()->citationsLink = el.attribute("href");

@@ -24,6 +24,7 @@ void Scholar::write(QIODevice *dev) const
 	lines << QString("ccount=%1").arg(citedBy);
 	lines << QString("externalLink=%1").arg(externalLink);
 	lines << QString("citationsLink=%1").arg(citationsLink);
+	lines << QString("publicationDate=%1").arg(publicationDate);
 	for (int i = 0; i < citingTitles.size(); i++)
 		lines << QString("ct=%1").arg(citingTitles[i]);
 	for (int i = 0; i < references.size(); i++)
@@ -51,6 +52,8 @@ void Scholar::read(QIODevice *dev)
 			externalLink = rest;
 		else if (key == "citationsLink")
 			citationsLink = rest;
+		else if (key == "publicationDate")
+			publicationDate = rest;
 		else if (key == "ct")
 			citingTitles << rest;
 		else if (key == "ref")

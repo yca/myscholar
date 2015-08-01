@@ -25,6 +25,7 @@ public:
 	QString uniqueHash;
 	QStringList citingTitles;
 	QStringList references;
+	QString publicationDate;
 };
 
 #endif // SCHOLAR_H
