@@ -174,7 +174,8 @@ int GoogleScholarParser::reparse()
 		/* check if this is a robot detection */
 		const QString pstr = page.mainFrame()->toPlainText();
 		if (pstr.contains("Please type the words below so that we know you're not a robot.")
-			|| pstr.contains("To continue, please type the characters below:"))
+			|| pstr.contains("To continue, please type the characters below:")
+			|| pstr.contains("Please show you're not a robot"))
 			return 0x1525;
 	}
 
