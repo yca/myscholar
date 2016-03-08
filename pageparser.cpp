@@ -135,7 +135,7 @@ void PageParser::proxyAuthenticationRequired(QNetworkProxy, QAuthenticator *a)
 GoogleScholarParser::GoogleScholarParser(QObject *parent)
 	: PageParser(parent)
 {
-	page.networkAccessManager()->setProxy(QNetworkProxy(QNetworkProxy::HttpProxy, "proxy.baskent.edu.tr", 8080, "hiler", "hil68er"));
+	//page.networkAccessManager()->setProxy(QNetworkProxy(QNetworkProxy::HttpProxy, "proxy.baskent.edu.tr", 8080, "hiler", "hil68er"));
 }
 
 int GoogleScholarParser::reparse()
@@ -187,6 +187,7 @@ int GoogleScholarParser::reparse()
 	if (!el.isNull())
 		r->nextLink = el.parent().attribute("href");
 	if (r->nextLink.isEmpty()) {
+		qDebug() << "next link is empty";
 		/* check if this is a robot detection */
 		const QString pstr = page.mainFrame()->toPlainText();
 		if (pstr.contains("Please type the words below so that we know you're not a robot.")

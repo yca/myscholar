@@ -64,6 +64,25 @@ QueryWidget::QueryWidget(QWidget *parent) :
 	ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	loadSorted(1);
+#if 0
+	QDir d("scholars");
+	QStringList files = d.entryList(QStringList() << "*.sxt", QDir::Files | QDir::NoDotAndDotDot);
+
+	foreach(QString f, files) {
+		Scholar *s = new Scholar;
+		s->uniqueHash = f.split(".").first();
+		s->readScholar();
+		papers << QPair<QString, int>(s->title, s->citedBy);
+		//papers << QPair<QString, int>(s->title, s->publicationDate.toInt());
+		scholars.insert(s->title, s);
+		scholarsByHash.insert(s->uniqueHash, s);
+	}
+	qSort(papers.begin(), papers.end(), lessThan2);
+	for (int i = 0; i < papers.size(); i++)
+		allTitles << papers[i].first;
+	ui->labelStat_1->setText(QString("Total of %1 scholars").arg(scholars.size()));
+	filter("");
+#endif
 }
 
 QueryWidget::~QueryWidget()

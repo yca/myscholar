@@ -5,6 +5,8 @@
 #include <QHash>
 #include <QWidget>
 #include <QWebPage>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 
 class QWebView;
 class QListWidgetItem;
@@ -41,6 +43,9 @@ protected:
 	bool eventFilter(QObject *obj, QEvent *ev);
 	void closeEvent(QCloseEvent *ev);
 private slots:
+	void frameCreated(QWebFrame *);
+	void unsupportedContent(QNetworkReply*);
+	void downloadRequested(const QNetworkRequest &);
 	void on_listTabs_itemDoubleClicked(QListWidgetItem *item);
 
 	void on_tabWidget_currentChanged(int index);
