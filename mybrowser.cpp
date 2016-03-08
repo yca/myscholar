@@ -28,6 +28,9 @@ void MyBrowser::addTab(const QUrl &url)
 		connect(page, SIGNAL(newTabRequest(QUrl)), SLOT(addTab(QUrl)));
 		view->setPage(page);
 		connect(view, SIGNAL(linkClicked(QUrl)), SLOT(addTab(QUrl)));
+		connect(page, SIGNAL(downloadRequested(const QNetworkRequest &)), SLOT(downloadRequested(const QNetworkRequest &)));
+		connect(page, SIGNAL(unsupportedContent(QNetworkReply*)), SLOT(unsupportedContent(QNetworkReply *)));
+		connect(page, SIGNAL(frameCreated(QWebFrame*)), SLOT(frameCreated(QWebFrame *)));
 		view->installEventFilter(this);
 		view->page()->networkAccessManager()->setProxy(QNetworkProxy(QNetworkProxy::HttpProxy, "proxy.baskent.edu.tr", 8080, "hiler", "hil68er"));
 		view->load(url);
@@ -63,6 +66,21 @@ bool MyBrowser::eventFilter(QObject *obj, QEvent *ev)
 void MyBrowser::closeEvent(QCloseEvent *ev)
 {
 	QWidget::closeEvent(ev);
+}
+
+void MyBrowser::frameCreated(QWebFrame *)
+{
+	qDebug() << "frame added";
+}
+
+void MyBrowser::unsupportedContent(QNetworkReply *reply)
+{
+	qDebug() << reply->url();
+}
+
+void MyBrowser::downloadRequested(const QNetworkRequest &req)
+{
+	qDebug() << req.url();
 }
 
 void MyBrowser::on_listTabs_itemDoubleClicked(QListWidgetItem *item)

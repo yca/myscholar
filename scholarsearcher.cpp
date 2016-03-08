@@ -96,7 +96,7 @@ void ScholarSearcher::citationSearchFinished()
 	ScholarResultList *r = (ScholarResultList *)parser->parseResult;
 	scholars << r->list2;
 	operationStep(scholars.size());
-	if (r->nextLink.isEmpty()) {
+	if (1 || r->nextLink.isEmpty()) {
 		operationStep(-1);
 		QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
 	} else

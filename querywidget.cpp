@@ -64,6 +64,7 @@ QueryWidget::QueryWidget(QWidget *parent) :
 		s->uniqueHash = f.split(".").first();
 		s->readScholar();
 		papers << QPair<QString, int>(s->title, s->citedBy);
+		//papers << QPair<QString, int>(s->title, s->publicationDate.toInt());
 		scholars.insert(s->title, s);
 		scholarsByHash.insert(s->uniqueHash, s);
 	}
