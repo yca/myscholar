@@ -22,6 +22,13 @@ static bool lessThan2(const QPair<QString, int> &p1, const QPair<QString, int> &
 	return true;
 }
 
+static bool greaterThan(const QPair<QString, int> &p1, const QPair<QString, int> &p2)
+{
+	if (p1.second > p2.second)
+		return false;
+	return true;
+}
+
 static QString getNote(const QStringList &cats, QString &cat, const QString &init = "")
 {
 	QFrame f;
@@ -56,22 +63,7 @@ QueryWidget::QueryWidget(QWidget *parent) :
 	ui->listWidget->setEditTriggers(QAbstractItemView::EditKeyPressed | QAbstractItemView::DoubleClicked);
 	ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
-	QDir d("scholars");
-	QStringList files = d.entryList(QStringList() << "*.sxt", QDir::Files | QDir::NoDotAndDotDot);
-
-	foreach(QString f, files) {
-		Scholar *s = new Scholar;
-		s->uniqueHash = f.split(".").first();
-		s->readScholar();
-		papers << QPair<QString, int>(s->title, s->citedBy);
-		scholars.insert(s->title, s);
-		scholarsByHash.insert(s->uniqueHash, s);
-	}
-	qSort(papers.begin(), papers.end(), lessThan2);
-	for (int i = 0; i < papers.size(); i++)
-		allTitles << papers[i].first;
-	ui->labelStat_1->setText(QString("Total of %1 scholars").arg(scholars.size()));
-	filter("");
+	loadSorted(1);
 }
 
 QueryWidget::~QueryWidget()
@@ -154,6 +146,35 @@ void QueryWidget::showItems(const QStringList &list)
 			ui->listWidget->item(i)->setForeground(COLOR_SEEN);
 	}
 	ui->labelStat_2->setText(QString("Showing %1 scholars").arg(list.size()));
+}
+
+void QueryWidget::loadSorted(int flags)
+{
+	QDir d("scholars");
+	QStringList files = d.entryList(QStringList() << "*.sxt", QDir::Files | QDir::NoDotAndDotDot);
+	scholars.clear();
+	scholarsByHash.clear();
+	allTitles.clear();
+
+	foreach(QString f, files) {
+		Scholar *s = new Scholar;
+		s->uniqueHash = f.split(".").first();
+		s->readScholar();
+		if (flags == 1)
+			papers << QPair<QString, int>(s->title, s->citedBy);
+		else if (flags == 2)
+			papers << QPair<QString, int>(s->title, s->publicationDate.toInt());
+		scholars.insert(s->title, s);
+		scholarsByHash.insert(s->uniqueHash, s);
+	}
+	if (flags == 1)
+		qSort(papers.begin(), papers.end(), lessThan2);
+	else if (flags == 2)
+		qSort(papers.begin(), papers.end(), greaterThan);
+	for (int i = 0; i < papers.size(); i++)
+		allTitles << papers[i].first;
+	ui->labelStat_1->setText(QString("Total of %1 scholars").arg(scholars.size()));
+	filter("");
 }
 
 void QueryWidget::on_listWidget_currentRowChanged(int currentRow)
@@ -253,4 +274,9 @@ void QueryWidget::openBrowser(const QString &text)
 	Scholar *s = scholars[text];
 	browser->addTab(s->externalLink);
 	browser->show();
+}
+
+void QueryWidget::on_comboSort_activated(int index)
+{
+	loadSorted(index + 1);
 }

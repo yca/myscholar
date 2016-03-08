@@ -160,3 +160,8 @@ void MyWebPage::linkHoveredS(const QString &link, const QString &title, const QS
 	if (!link.isEmpty())
 		lastLink = link;
 }
+
+QString MyWebPage::userAgentForUrl(const QUrl &url) const
+{
+	return QString("Let me in Google, this is for research purposes only!");
+}

@@ -132,6 +132,12 @@ void PageParser::proxyAuthenticationRequired(QNetworkProxy, QAuthenticator *a)
 	qDebug() << "proxy authentication required";
 }
 
+GoogleScholarParser::GoogleScholarParser(QObject *parent)
+	: PageParser(parent)
+{
+	page.networkAccessManager()->setProxy(QNetworkProxy(QNetworkProxy::HttpProxy, "proxy.baskent.edu.tr", 8080, "hiler", "hil68er"));
+}
+
 int GoogleScholarParser::reparse()
 {
 	if (parseResult)

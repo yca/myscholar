@@ -2,6 +2,7 @@
 
 #include <errno.h>
 
+#include <QDir>
 #include <QDebug>
 #include <QFileInfo>
 
@@ -76,6 +77,9 @@ int Scholar::readScholar(const QString &path)
 
 int Scholar::saveScholar(const QString &path)
 {
+	QDir d = QDir::current();
+	if (!d.exists(path))
+		d.mkpath(path);
 	QFile f(QString("%2/%1.sxt").arg(uniqueHash).arg(path));
 	if (f.open(QIODevice::WriteOnly)) {
 		write(&f);

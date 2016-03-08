@@ -34,12 +34,15 @@ private slots:
 
 	void on_pushNote_clicked();
 
+	void on_comboSort_activated(int index);
+
 private:
 	void openBrowser(const QString &text);
 	int filter(QString text);
 	int filterByHash(const QString &hash);
 	int filterByRead(bool read, bool seen);
 	void showItems(const QStringList &list);
+	void loadSorted(int flags);
 
 	Ui::QueryWidget *ui;
 	QStringList allTitles;

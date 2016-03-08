@@ -76,6 +76,7 @@ class GoogleScholarParser : public PageParser
 {
 	Q_OBJECT
 public:
+	explicit GoogleScholarParser(QObject *parent = 0);
 	virtual int reparse();
 };
 

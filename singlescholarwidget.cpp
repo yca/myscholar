@@ -246,7 +246,7 @@ void SingleScholarWidget::showBrowser(QWebPage *page)
 {
 	if (w == NULL) {
 		w = new QWebView;
-		w->setWindowModality(Qt::ApplicationModal);
+		//w->setWindowModality(Qt::ApplicationModal);
 	}
 	w->setPage(page);
 	w->show();

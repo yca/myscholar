@@ -23,6 +23,7 @@ signals:
 	void newTabRequest(QUrl);
 protected slots:
 	void linkHoveredS(const QString &link, const QString &title, const QString &textContent);
+	QString userAgentForUrl(const QUrl &url) const;
 protected:
 	QString lastLink;
 };
