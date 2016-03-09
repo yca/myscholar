@@ -14,20 +14,71 @@
    <string>Scholar Query</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0">
-    <widget class="QLabel" name="labelStat_1">
+   <item row="2" column="6">
+    <widget class="QLabel" name="labelStat_3">
      <property name="text">
       <string/>
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="6">
-    <widget class="QListWidget" name="listWidget"/>
+   <item row="0" column="6">
+    <widget class="QComboBox" name="comboSort">
+     <item>
+      <property name="text">
+       <string>By Citations</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>By Year</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="QPushButton" name="pushNote">
+     <property name="text">
+      <string>Note</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QLineEdit" name="lineQuery">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
    </item>
    <item row="0" column="4">
     <widget class="QPushButton" name="pushBookmarks">
      <property name="text">
       <string>Quotes</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="7">
+    <widget class="QListWidget" name="listWidget"/>
+   </item>
+   <item row="2" column="1">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="labelStat_1">
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>
@@ -51,55 +102,11 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="5">
-    <widget class="QLabel" name="labelStat_3">
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="3">
-    <widget class="QLineEdit" name="lineQuery">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>1</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="3">
-    <widget class="QPushButton" name="pushNote">
-     <property name="text">
-      <string>Note</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="5">
-    <widget class="QComboBox" name="comboSort">
-     <item>
-      <property name="text">
-       <string>By Citations</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>By Year</string>
-      </property>
-     </item>
+    <widget class="QPushButton" name="pushExport">
+     <property name="text">
+      <string>Export</string>
+     </property>
     </widget>
    </item>
   </layout>

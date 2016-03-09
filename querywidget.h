@@ -36,6 +36,8 @@ private slots:
 
 	void on_comboSort_activated(int index);
 
+	void on_pushExport_clicked();
+
 private:
 	void openBrowser(const QString &text);
 	int filter(QString text);

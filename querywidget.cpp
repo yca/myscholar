@@ -54,6 +54,15 @@ static QString getNote(const QString &init = "")
 	return getNote(QStringList(), cat, init);
 }
 
+static void exportText(const QString &filename, const QStringList &lines)
+{
+	QFile file(filename);
+	if (!file.open(QIODevice::WriteOnly))
+		return;
+	file.write(lines.join("\n").toUtf8());
+	file.close();
+}
+
 QueryWidget::QueryWidget(QWidget *parent) :
 	QWidget(parent),
 	ui(new Ui::QueryWidget),
@@ -298,4 +307,14 @@ void QueryWidget::openBrowser(const QString &text)
 void QueryWidget::on_comboSort_activated(int index)
 {
 	loadSorted(index + 1);
+}
+
+void QueryWidget::on_pushExport_clicked()
+{
+	QStringList lines;
+	for (int i = 0; i < papers.size(); i++) {
+		Scholar *s = scholars[papers[i].first];
+		lines << QString("\"%1\",\"%2\",\"%3\",\"%4\"").arg(s->title).arg(s->citedBy).arg(s->publicationDate).arg(s->externalLink);
+	}
+	exportText("papers.csv", lines);
 }
